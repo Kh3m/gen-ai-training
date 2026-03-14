@@ -6,10 +6,9 @@ It contains notes, experiments, and hands-on projects as I explore LLMs, AI agen
 ## Repository Structure
 
 gen-ai-training/
-│
-├── python-fundamentals/ # Core Python concepts needed for AI development
-├── streamlit/ # Experiments building quick AI interfaces
-└── requirements.txt # Project dependencies
+|-- python-fundamentals/ # Core Python concepts needed for AI development
+|-- streamlit/ # Experiments building quick AI interfaces
+|-- requirements.txt # Project dependencies
 
 ## Goals
 
