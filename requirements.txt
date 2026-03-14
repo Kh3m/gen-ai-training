@@ -1,0 +1,4 @@
+ipykernel
+streamlit
+pandas
+numpy
