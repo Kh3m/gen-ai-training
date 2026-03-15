@@ -10,6 +10,7 @@ gen-ai-training/
 │
 ├── python-fundamentals/ # Core Python concepts needed for AI development
 ├── streamlit/ # Experiments building quick AI interfaces
+├── pandas/ # Pandas DataFrame and Series with functions explorations
 └── requirements.txt # Project dependencies
 ```
 
