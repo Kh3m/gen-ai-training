@@ -8,10 +8,11 @@ It contains notes, experiments, and hands-on projects as I explore LLMs, AI agen
 ```
 gen-ai-training/
 │
-├── python-fundamentals/ # Core Python concepts needed for AI development
-├── streamlit/ # Experiments building quick AI interfaces
-├── pandas/ # Pandas DataFrame and Series with functions explorations
-└── requirements.txt # Project dependencies
+├── python-fundamentals/   # Core Python concepts and exercises required for AI/ML development
+├── streamlit/             # Experiments building interactive AI interfaces and quick demos
+├── pandas/                # Data analysis practice using Pandas (DataFrames, Series, and common operations)
+├── NLP/                   # Natural Language Processing experiments (tokenization, text preprocessing, NLTK, etc.)
+└── requirements.txt       # List of Python dependencies required to run the projects
 ```
 
 ## Goals

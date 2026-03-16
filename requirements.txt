@@ -2,3 +2,4 @@ ipykernel
 streamlit
 pandas
 numpy
+nltk
