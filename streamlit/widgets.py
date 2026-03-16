@@ -17,7 +17,7 @@ st.write("Your Gender: ", sex)
 
 upload_file = st.file_uploader("Choose a CSV file", type="csv")
  
-if upload_file:
+if upload_file is not None:
     uploaded_csv = pd.read_csv(upload_file)
     st.write("You Uploaded: ")
     st.write(uploaded_csv)
