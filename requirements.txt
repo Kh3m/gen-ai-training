@@ -1,6 +1,6 @@
-ipykernel
-streamlit
-pandas
-numpy
-nltk
-scikit-learn
+ipykernel>=7.2.0
+streamlit>=1.55.0
+pandas>=2.3.3
+numpy>=2.4.2
+nltk>=3.9.3
+scikit-learn>=1.8.0
