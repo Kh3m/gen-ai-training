@@ -29,6 +29,7 @@ gen-ai-training/
 │   ├── named_entity_recognition.ipynb
 │   ├── bow/               # Bag of Words (notebook + Streamlit demo)
 │   ├── n-grams/           # BoW with n-grams
+│   ├── tf-idf/            # TF-IDF vectorization
 │   └── datasets/          # Shared datasets (smsspamcollection.csv)
 │
 └── requirements.txt       # ipykernel, streamlit, pandas, numpy, nltk, scikit-learn
@@ -85,4 +86,4 @@ The NLP notebooks and `bow_streamlit.py` share the same preprocessing shape:
 - Python fundamentals (data structures, OOP, regex)
 - Pandas for data analysis
 - Streamlit for interactive demos
-- NLP: tokenization, stopwords, stemming, lemmatization, POS tagging, NER, Bag of Words, n-grams
+- NLP: tokenization, stopwords, stemming, lemmatization, POS tagging, NER, Bag of Words, n-grams, TF-IDF
