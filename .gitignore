@@ -1,2 +1,5 @@
 myvenv/
 refrence/
+.env
+*.env
+.venv/
