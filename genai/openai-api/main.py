@@ -5,10 +5,12 @@ import os
 load_dotenv()  # reads .env into os.environ
 
 groq_api_key = os.environ.get("GROQ_API_KEY")
+groq_base_url = os.environ.get("GROQ_BASE_URL")
+groq_model = os.environ.get("GROQ_MODEL")
 
 client = OpenAI(
     api_key=groq_api_key,
-    base_url="https://api.groq.com/openai/v1"
+    base_url=groq_base_url
 )
 
 history = []
@@ -26,7 +28,7 @@ while True:
         break
 
     response = client.responses.create(
-        model="llama-3.3-70b-versatile",
+        model=groq_model,
         instructions="You are an helpful assistant.",
         input = history,
         # input=input_data
