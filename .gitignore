@@ -3,3 +3,6 @@ refrence/
 .env
 *.env
 .venv/
+
+# TensorBoard run logs — machine-specific, regenerated on each training run
+logs/
