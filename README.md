@@ -42,10 +42,12 @@ gen-ai-training/
 │
 ├── deep-learning/         # Neural networks with TensorFlow / Keras
 │   └── ann-classification/
-│       ├── experiments.ipynb   # ANN churn prediction: preprocessing pipeline
-│       ├── Churn_Modelling.csv # Bank customer churn dataset
-│       ├── requirements.txt    # tensorflow, tensorboard, sklearn, streamlit
-│       └── *.pkl               # Fitted encoders + scaler (gitignored, see below)
+│       ├── experiments.ipynb        # ANN churn prediction: preprocessing pipeline
+│       ├── Churn_Modelling.csv      # Bank customer churn dataset
+│       ├── requirements.txt         # tensorflow, tensorboard, sklearn, streamlit
+│       ├── gender_label_encoder.pkl # Fitted LabelEncoder (Gender)
+│       ├── geo_one_hot_encoder.pkl  # Fitted OneHotEncoder (Geography)
+│       └── scaler.pkl               # Fitted StandardScaler
 │
 └── requirements.txt       # Combined deps for the workspace
 ```
@@ -94,7 +96,7 @@ They use the official `openai` SDK pointed at that base URL, so the same code wo
 - **Notebooks** — open in VS Code or Jupyter and select the `.venv` kernel.
 - **Streamlit demos** — `streamlit run <file>.py`. Working directory matters: `NLP/bow/bow_streamlit.py` reads `../datasets/smsspamcollection.csv` relative to its own folder, so run it from `NLP/bow/`.
 - **`genai/` scripts** — `python main.py` from inside the script's own folder; they resolve `staff.db` and `.env` by relative path.
-- **`deep-learning/` notebooks** — run from `deep-learning/ann-classification/`; the notebook reads `Churn_Modelling.csv` and writes the `.pkl` encoders into the same folder. Those pickles are gitignored, so run the notebook through the "Save encoders" cell once before any inference code that loads them.
+- **`deep-learning/` notebooks** — run from `deep-learning/ann-classification/`; the notebook reads `Churn_Modelling.csv` and writes the `.pkl` encoders into the same folder. The pickles are committed deliberately — a Streamlit deployment builds from the repo, so the fitted encoders and scaler have to be present at runtime rather than refitted on the server.
 
 ## NLP pipeline pattern
 
