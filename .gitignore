@@ -3,3 +3,6 @@ refrence/
 .env
 *.env
 .venv/
+
+# Fitted encoders/scalers — regenerate by running the notebook
+*.pkl
