@@ -42,12 +42,16 @@ gen-ai-training/
 │
 ├── deep-learning/         # Neural networks with TensorFlow / Keras
 │   └── ann-classification/
-│       ├── experiments.ipynb        # ANN churn prediction: preprocessing pipeline
-│       ├── Churn_Modelling.csv      # Bank customer churn dataset
+│       ├── experiments.ipynb        # Preprocessing, model definition, training
+│       ├── prediction.ipynb         # Load saved artifacts, predict on one customer
+│       ├── Churn_Modelling.csv      # Bank customer churn dataset (10k rows)
 │       ├── requirements.txt         # tensorflow, tensorboard, sklearn, streamlit
 │       ├── gender_label_encoder.pkl # Fitted LabelEncoder (Gender)
 │       ├── geo_one_hot_encoder.pkl  # Fitted OneHotEncoder (Geography)
-│       └── scaler.pkl               # Fitted StandardScaler
+│       ├── scaler.pkl               # Fitted StandardScaler
+│       ├── sequential_model.h5      # Trained model, legacy HDF5 format
+│       ├── sequential_model.keras   # Trained model, native Keras format
+│       └── logs/fit/                # TensorBoard run logs
 │
 └── requirements.txt       # Combined deps for the workspace
 ```
@@ -96,7 +100,7 @@ They use the official `openai` SDK pointed at that base URL, so the same code wo
 - **Notebooks** — open in VS Code or Jupyter and select the `.venv` kernel.
 - **Streamlit demos** — `streamlit run <file>.py`. Working directory matters: `NLP/bow/bow_streamlit.py` reads `../datasets/smsspamcollection.csv` relative to its own folder, so run it from `NLP/bow/`.
 - **`genai/` scripts** — `python main.py` from inside the script's own folder; they resolve `staff.db` and `.env` by relative path.
-- **`deep-learning/` notebooks** — run from `deep-learning/ann-classification/`; the notebook reads `Churn_Modelling.csv` and writes the `.pkl` encoders into the same folder. The pickles are committed deliberately — a Streamlit deployment builds from the repo, so the fitted encoders and scaler have to be present at runtime rather than refitted on the server.
+- **`deep-learning/` notebooks** — run from `deep-learning/ann-classification/`; every path inside them is relative to that folder. Run `experiments.ipynb` first (it writes the `.pkl` encoders and both model files), then `prediction.ipynb`, which loads them. The encoders and models are committed deliberately — a Streamlit deployment builds from the repo, so they have to be present at runtime rather than refitted on the server.
 
 ## NLP pipeline pattern
 
@@ -109,16 +113,47 @@ The NLP notebooks and `bow_streamlit.py` share the same preprocessing shape:
 5. Stem (`PorterStemmer`) or lemmatize (`WordNetLemmatizer`, often `pos="v"`)
 6. Re-join words and feed into `CountVectorizer`
 
-## ANN preprocessing pattern
+## ANN churn classification
 
-`deep-learning/ann-classification/experiments.ipynb` follows the standard tabular prep flow before the network is built:
+Binary classification on the bank customer churn dataset — predict `Exited` from 10 customer attributes. Split across two notebooks: `experiments.ipynb` trains and saves, `prediction.ipynb` loads and infers.
+
+### Preprocessing (`experiments.ipynb`)
 
 1. Drop identifier columns (`RowNumber`, `CustomerId`, `Surname`)
 2. `LabelEncoder` on `Gender`
-3. `OneHotEncoder` on `Geography`, expanded into columns and concatenated back
+3. `OneHotEncoder` on `Geography`, expanded into columns and concatenated back — 12 features total
 4. `train_test_split` (80/20, `random_state=42`) into `X` / `y` on `Exited`
 5. `StandardScaler` — `fit_transform` on train, `transform` on test
 6. Pickle the fitted encoders and scaler so inference reuses the exact same transforms
+
+### Model and training
+
+```
+Sequential([
+    Dense(64, input_shape=(12,), activation="relu"),   # Hidden layer 1
+    Dense(32, activation="relu"),                      # Hidden layer 2
+    Dense(1,  activation="sigmoid"),                   # Output — churn probability
+])
+```
+
+2,945 trainable parameters. Compiled with `adam` / `binary_crossentropy`, tracking `accuracy`. Trained for up to 100 epochs with two callbacks:
+
+- **`EarlyStopping`** — `monitor="val_loss"`, `patience=10`, `restore_best_weights=True`
+- **`TensorBoard`** — writes to a timestamped `logs/fit/<YYYYMMDD-HHMMSS>` directory
+
+Saved in both formats to compare them: `.h5` (legacy HDF5, emits a deprecation warning) and `.keras` (current recommended).
+
+### Inference (`prediction.ipynb`)
+
+Loads the three pickles plus both model files, then mirrors the training transforms on a single-row DataFrame: label-encode `Gender` → one-hot `Geography` → concat → `scaler.transform` → `predict` → threshold at 0.5. Both model formats produce identical output, which is the point of saving both.
+
+### Viewing the training run
+
+```bash
+tensorboard --logdir deep-learning/ann-classification/logs/fit
+```
+
+Or inline in the notebook via `%load_ext tensorboard` and `%tensorboard --logdir logs/fit`.
 
 ## Goals
 
@@ -136,4 +171,4 @@ The NLP notebooks and `bow_streamlit.py` share the same preprocessing shape:
 - LLM APIs: OpenAI SDK, OpenAI-compatible endpoints, multi-turn conversation history
 - Prompt engineering
 - RAG and CAG workflows over a SQLite knowledge source
-- Deep learning: ANN classification with TensorFlow / Keras, feature encoding and scaling
+- Deep learning: ANN binary classification with TensorFlow / Keras — feature encoding and scaling, callbacks (early stopping, TensorBoard), model serialization and reload for inference
