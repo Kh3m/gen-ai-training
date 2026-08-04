@@ -18,7 +18,8 @@ gen-ai-training/
 │
 ├── streamlit/             # Standalone Streamlit demos (not a multi-page app)
 │   ├── core.py            # DataFrames + line chart
-│   └── widgets.py         # Inputs, sliders, file upload
+│   ├── widgets.py         # Inputs, sliders, file upload
+│   └── all_inputs_demo.py # Reference sheet: every input widget in one page
 │
 ├── NLP/                   # Natural Language Processing experiments
 │   ├── tokenization.ipynb
@@ -105,6 +106,21 @@ They use the official `openai` SDK pointed at that base URL, so the same code wo
 - **`deep-learning/` notebooks** — run from `deep-learning/ann/ann-classification/`; every path inside them is relative to that folder. Run `experiments.ipynb` first (it writes the `.pkl` encoders and both model files), then `prediction.ipynb`, which loads them. The encoders and models are committed deliberately — a Streamlit deployment builds from the repo, so they have to be present at runtime rather than refitted on the server.
 - **Churn predictor app** — `streamlit run deep-learning/ann/ann-classification/ann_classification_app.py`. Unlike the NLP demo it resolves its artifacts from `os.path.dirname(__file__)`, so the working directory doesn't matter.
 
+## Streamlit input widgets
+
+`streamlit/all_inputs_demo.py` is a reference sheet rather than an exercise — one page that renders every input widget and echoes its return value, grouped by kind:
+
+- **Text & number** — `text_input`, `text_area`, `number_input`
+- **Selection** — `selectbox`, `multiselect`, `radio`, `checkbox`, `toggle`, `select_slider`
+- **Sliders** — `slider` for a single value and for a `(low, high)` tuple
+- **Date & time** — `date_input`, `time_input`
+- **Buttons** — `button`, `download_button`, `link_button`
+- **File & media** — `file_uploader`, `camera_input`, `audio_input`
+- **Other** — `color_picker`, `data_editor` (with `num_rows="dynamic"`), `feedback`, `pills`
+- **Forms** — `st.form` + `form_submit_button`, which batch their inputs into a single rerun instead of one per interaction
+
+No dataset or state, so it runs from anywhere: `streamlit run streamlit/all_inputs_demo.py`.
+
 ## NLP pipeline pattern
 
 The NLP notebooks and `bow_streamlit.py` share the same preprocessing shape:
@@ -178,7 +194,7 @@ Or inline in the notebook via `%load_ext tensorboard` and `%tensorboard --logdir
 
 - Python fundamentals (data structures, OOP, regex)
 - Pandas for data analysis
-- Streamlit for interactive demos
+- Streamlit for interactive demos — charts, the full input widget set, forms, caching
 - NLP: tokenization, stopwords, stemming, lemmatization, POS tagging, NER, Bag of Words, n-grams, TF-IDF
 - LLM APIs: OpenAI SDK, OpenAI-compatible endpoints, multi-turn conversation history
 - Prompt engineering
