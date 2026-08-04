@@ -41,17 +41,19 @@ gen-ai-training/
 │   └── requirements.txt   # openai, python-dotenv, pydantic, httpx
 │
 ├── deep-learning/         # Neural networks with TensorFlow / Keras
-│   └── ann-classification/
-│       ├── experiments.ipynb        # Preprocessing, model definition, training
-│       ├── prediction.ipynb         # Load saved artifacts, predict on one customer
-│       ├── Churn_Modelling.csv      # Bank customer churn dataset (10k rows)
-│       ├── requirements.txt         # tensorflow, tensorboard, sklearn, streamlit
-│       ├── gender_label_encoder.pkl # Fitted LabelEncoder (Gender)
-│       ├── geo_one_hot_encoder.pkl  # Fitted OneHotEncoder (Geography)
-│       ├── scaler.pkl               # Fitted StandardScaler
-│       ├── sequential_model.h5      # Trained model, legacy HDF5 format
-│       ├── sequential_model.keras   # Trained model, native Keras format
-│       └── logs/fit/                # TensorBoard run logs
+│   └── ann/               # Artificial neural networks
+│       └── ann-classification/
+│           ├── experiments.ipynb           # Preprocessing, model definition, training
+│           ├── prediction.ipynb            # Load saved artifacts, predict on one customer
+│           ├── ann_classification_app.py   # Streamlit churn predictor
+│           ├── Churn_Modelling.csv         # Bank customer churn dataset (10k rows)
+│           ├── requirements.txt            # tensorflow, tensorboard, sklearn, streamlit
+│           ├── gender_label_encoder.pkl    # Fitted LabelEncoder (Gender)
+│           ├── geo_one_hot_encoder.pkl     # Fitted OneHotEncoder (Geography)
+│           ├── scaler.pkl                  # Fitted StandardScaler
+│           ├── sequential_model.h5         # Trained model, legacy HDF5 format
+│           ├── sequential_model.keras      # Trained model, native Keras format
+│           └── logs/fit/                   # TensorBoard run logs
 │
 └── requirements.txt       # Combined deps for the workspace
 ```
@@ -67,7 +69,7 @@ source .venv/Scripts/activate
 pip install -r requirements.txt
 ```
 
-`genai/` and `deep-learning/ann-classification/` each ship their own `requirements.txt`. Use those if you'd rather keep a lighter, per-topic environment instead of installing everything at the root.
+`genai/` and `deep-learning/ann/ann-classification/` each ship their own `requirements.txt`. Use those if you'd rather keep a lighter, per-topic environment instead of installing everything at the root.
 
 ### NLTK corpora
 
@@ -100,7 +102,8 @@ They use the official `openai` SDK pointed at that base URL, so the same code wo
 - **Notebooks** — open in VS Code or Jupyter and select the `.venv` kernel.
 - **Streamlit demos** — `streamlit run <file>.py`. Working directory matters: `NLP/bow/bow_streamlit.py` reads `../datasets/smsspamcollection.csv` relative to its own folder, so run it from `NLP/bow/`.
 - **`genai/` scripts** — `python main.py` from inside the script's own folder; they resolve `staff.db` and `.env` by relative path.
-- **`deep-learning/` notebooks** — run from `deep-learning/ann-classification/`; every path inside them is relative to that folder. Run `experiments.ipynb` first (it writes the `.pkl` encoders and both model files), then `prediction.ipynb`, which loads them. The encoders and models are committed deliberately — a Streamlit deployment builds from the repo, so they have to be present at runtime rather than refitted on the server.
+- **`deep-learning/` notebooks** — run from `deep-learning/ann/ann-classification/`; every path inside them is relative to that folder. Run `experiments.ipynb` first (it writes the `.pkl` encoders and both model files), then `prediction.ipynb`, which loads them. The encoders and models are committed deliberately — a Streamlit deployment builds from the repo, so they have to be present at runtime rather than refitted on the server.
+- **Churn predictor app** — `streamlit run deep-learning/ann/ann-classification/ann_classification_app.py`. Unlike the NLP demo it resolves its artifacts from `os.path.dirname(__file__)`, so the working directory doesn't matter.
 
 ## NLP pipeline pattern
 
@@ -115,7 +118,7 @@ The NLP notebooks and `bow_streamlit.py` share the same preprocessing shape:
 
 ## ANN churn classification
 
-Binary classification on the bank customer churn dataset — predict `Exited` from 10 customer attributes. Split across two notebooks: `experiments.ipynb` trains and saves, `prediction.ipynb` loads and infers.
+Binary classification on the bank customer churn dataset — predict `Exited` from 10 customer attributes. Three pieces: `experiments.ipynb` trains and saves, `prediction.ipynb` loads and infers, `ann_classification_app.py` wraps the same inference in a Streamlit UI.
 
 ### Preprocessing (`experiments.ipynb`)
 
@@ -147,10 +150,19 @@ Saved in both formats to compare them: `.h5` (legacy HDF5, emits a deprecation w
 
 Loads the three pickles plus both model files, then mirrors the training transforms on a single-row DataFrame: label-encode `Gender` → one-hot `Geography` → concat → `scaler.transform` → `predict` → threshold at 0.5. Both model formats produce identical output, which is the point of saving both.
 
+### Streamlit app (`ann_classification_app.py`)
+
+The same inference path, driven by widgets instead of a hardcoded row. Worth noting:
+
+- Model and encoders load once behind `@st.cache_resource` — they're unhashable objects, so this is the right cache decorator rather than `@st.cache_data`.
+- The dropdown options come from the fitted encoders themselves (`geo_one_hot_encoder.categories_[0]`, `gender_label_encoder.classes_`), so the UI can't offer a category the model was never trained on.
+- It shows each stage — raw → encoded → scaled → prediction — so the transform pipeline is visible rather than hidden.
+- Only `sequential_model.keras` is loaded here; the `.h5` copy exists for the notebook comparison.
+
 ### Viewing the training run
 
 ```bash
-tensorboard --logdir deep-learning/ann-classification/logs/fit
+tensorboard --logdir deep-learning/ann/ann-classification/logs/fit
 ```
 
 Or inline in the notebook via `%load_ext tensorboard` and `%tensorboard --logdir logs/fit`.
@@ -171,4 +183,4 @@ Or inline in the notebook via `%load_ext tensorboard` and `%tensorboard --logdir
 - LLM APIs: OpenAI SDK, OpenAI-compatible endpoints, multi-turn conversation history
 - Prompt engineering
 - RAG and CAG workflows over a SQLite knowledge source
-- Deep learning: ANN binary classification with TensorFlow / Keras — feature encoding and scaling, callbacks (early stopping, TensorBoard), model serialization and reload for inference
+- Deep learning: ANN binary classification with TensorFlow / Keras — feature encoding and scaling, callbacks (early stopping, TensorBoard), model serialization and reload for inference, serving the trained model through Streamlit
