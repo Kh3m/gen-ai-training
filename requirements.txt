@@ -27,3 +27,6 @@ matplotlib
 # dl
 tensorflow
 tensorboard
+
+torch
+torchinfo
