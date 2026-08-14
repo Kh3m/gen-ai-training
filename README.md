@@ -28,8 +28,11 @@ gen-ai-training/
 │   ├── text_processing_lemmatization.ipynb
 │   ├── part_of_speech_tag.ipynb
 │   ├── named_entity_recognition.ipynb
-│   ├── one_hot_encoding/  # One-hot encoding words by hand with sklearn
-│   ├── bow/               # Bag of Words (notebook + Streamlit demo)
+│   ├── one_hot_encoding/  # One-hot encoding → Keras Tokenizer → Embedding layer
+│   ├── bow/               # Bag of Words
+│   │   ├── bow_simple.ipynb   # Minimal CountVectorizer example
+│   │   ├── bag_of_words.ipynb # Full pipeline on the SMS spam dataset
+│   │   └── bow_streamlit.py   # Same pipeline as a Streamlit demo
 │   ├── n-grams/           # BoW with n-grams
 │   ├── tf-idf/            # TF-IDF vectorization
 │   └── datasets/          # Shared datasets (smsspamcollection.csv)
@@ -143,7 +146,9 @@ The NLP notebooks and `bow_streamlit.py` share the same preprocessing shape:
 
 ## One-hot encoding words
 
-`NLP/one_hot_encoding/one_hot_encoding.ipynb` builds one-hot vectors from scratch on three toy sentences, before any vectorizer does it for you. The point is to see the representation the later techniques replace — the notebook first prints the expected matrices by hand, then reproduces them in code:
+`NLP/one_hot_encoding/one_hot_encoding.ipynb` walks the same three toy sentences (`"The food is good"`, `"The food is bad"`, `"Pizza is amazing"`) through four different ways of turning words into numbers, ending at word embeddings. The notebook first prints the expected matrices by hand, then reproduces them in code.
+
+### 1. `sklearn.OneHotEncoder` — by hand
 
 1. Tokenize each sentence with `.lower().split()`
 2. Flatten to `sorted(set(all_words))` — a 7-word vocabulary
@@ -151,6 +156,40 @@ The NLP notebooks and `bow_streamlit.py` share the same preprocessing shape:
 4. Encode a sentence by transforming its token column, giving one row per word rather than one row per sentence
 
 That last part is the takeaway: a sentence becomes a `(n_words × vocab_size)` matrix whose width grows with the vocabulary and which carries no frequency or ordering information — which is exactly what Bag of Words, n-grams, and TF-IDF go on to address.
+
+### 2. `pd.get_dummies` — the pandas equivalent
+
+Same result with labelled columns instead of a bare array: build a `pd.Series` of every token, call `get_dummies`, then slice the rows back into per-sentence blocks. It also shows the gotcha — encoding unseen words (`["love", "good", "food"]`) needs `.reindex(columns=dummies.columns, fill_value=0)`, because `get_dummies` derives its columns from whatever it's handed and has no memory of a fitted vocabulary.
+
+### 3. `keras.preprocessing.text.one_hot` — and why to avoid it
+
+Despite the name, this hashes each word into `[1, vocab_size)` rather than one-hot encoding it. The notebook demonstrates the failure directly: `"the food is bad"` → `[7, 2, 2, 1]`, where `food` and `is` collide on index 2. Setting `vocab_size=2` makes the collapse total. The problems are that there's no inspectable/reversible word index, uniqueness can't be guaranteed (only made less likely by inflating `vocab_size`), and the allocation is random hashing rather than anything vocabulary-aware. `hash(word) % 30` is run directly to show what's actually happening underneath.
+
+### 4. `Tokenizer` + `Embedding` — the fix
+
+`Tokenizer().fit_on_texts(...)` gives a real, inspectable `word_index` (`{'is': 1, 'the': 2, 'food': 3, ...}`) with no collisions, and `texts_to_sequences` turns sentences into integer sequences. From there:
+
+1. `vocab_size = len(tokenizer.word_index) + 1` — the `+1` reserves index 0 for padding
+2. `pad_sequences(..., padding='pre', maxlen=4)` to a uniform length
+3. A one-layer `Sequential([Embedding(vocab_size, 10)])` compiled with `adam` / `mse`
+4. `model.predict(padded_docs)` to read out each word's 10-dimensional vector
+
+Nothing is trained here — the embeddings are still random initialisations. The point is the shape change: from a sparse `vocab_size`-wide one-hot row per word to a dense 10-dimensional vector per word, which is the representation everything downstream actually uses.
+
+> This notebook imports TensorFlow/Keras for parts 3 and 4, so it needs the root `requirements.txt` rather than an NLP-only environment.
+
+## Bag of Words
+
+`NLP/bow/bow_simple.ipynb` is the minimal version, kept deliberately separate from the SMS spam pipeline in `bag_of_words.ipynb`. It uses `CountVectorizer(stop_words="english")` on two sentences that differ only in a negation and a repeat:
+
+```
+"The food is good"          → good: 1
+"The food is not good good" → good: 2
+```
+
+Two things it makes visible. First, `sklearn.feature_extraction.text.ENGLISH_STOP_WORDS` (printed in full) is a different list from NLTK's — and it contains `not`, so the built-in `stop_words="english"` silently discards the negation and both sentences reduce to the same word. Second, the notebook rebuilds the cleaned text by hand alongside the count matrix in a single DataFrame, so the vocabulary, `vectorizer.vocabulary_` indices, and counts line up row by row.
+
+`bag_of_words.ipynb` and `bow_streamlit.py` then run the full NLTK pipeline above on the real dataset.
 
 ## ANN churn classification (TensorFlow / Keras)
 
@@ -234,6 +273,7 @@ Placeholder — the PyTorch port of the churn classifier hasn't been written yet
 - Pandas for data analysis
 - Streamlit for interactive demos — charts, the full input widget set, forms, caching
 - NLP: tokenization, stopwords, stemming, lemmatization, POS tagging, NER, one-hot encoding, Bag of Words, n-grams, TF-IDF
+- Text-to-numeric representations: `OneHotEncoder` vs `pd.get_dummies` vs Keras hashing (`one_hot`) vs `Tokenizer`, padding, and dense word embeddings via a Keras `Embedding` layer
 - LLM APIs: OpenAI SDK, OpenAI-compatible endpoints, multi-turn conversation history
 - Prompt engineering
 - RAG and CAG workflows over a SQLite knowledge source
