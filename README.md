@@ -30,7 +30,7 @@ gen-ai-training/
 │   ├── named_entity_recognition.ipynb
 │   ├── one_hot_encoding/  # One-hot encoding → Keras Tokenizer → Embedding layer
 │   ├── bow/               # Bag of Words
-│   │   ├── bow_basics.ipynb   # Minimal CountVectorizer example
+│   │   ├── bow_basics.ipynb   # Minimal CountVectorizer + ngram_range examples
 │   │   ├── bag_of_words.ipynb # Full pipeline on the SMS spam dataset
 │   │   └── bow_streamlit.py   # Same pipeline as a Streamlit demo
 │   ├── n-grams/           # BoW with n-grams
@@ -203,9 +203,25 @@ Nothing is trained here — the embeddings are still random initialisations. The
 "The food is not good good" → good: 2
 ```
 
-Two things it makes visible. First, `sklearn.feature_extraction.text.ENGLISH_STOP_WORDS` (printed in full) is a different list from NLTK's — and it contains `not`, so the built-in `stop_words="english"` silently discards the negation and both sentences reduce to the same word. Second, the notebook rebuilds the cleaned text by hand alongside the count matrix in a single DataFrame, so the vocabulary, `vectorizer.vocabulary_` indices, and counts line up row by row.
+Two things it makes visible. First, `sklearn.feature_extraction.text.ENGLISH_STOP_WORDS` (printed in full) is a different list from NLTK's — and it contains `not`, so the built-in `stop_words="english"` silently discards the negation and both sentences reduce to the same word. Second, a `clean_data()` helper rebuilds the cleaned text by hand alongside the count matrix in a single DataFrame, so the vocabulary, `vectorizer.vocabulary_` indices, and counts line up row by row.
 
-`bag_of_words.ipynb` and `bow_streamlit.py` then run the full NLTK pipeline above on the real dataset.
+### n-grams, at toy scale
+
+The second half of the notebook switches to a five-sentence corpus (`"He is a good Boy"`, `"She is a good girl"`, …) and wraps the vectorizer in `with_n_grams(n_grams=(1,1))`, so the same corpus can be re-vectorized at different `ngram_range` values and the DataFrames compared side by side:
+
+| `ngram_range` | Features |
+|---|---|
+| `(1,1)` | unigrams — the default; every feature is a single word |
+| `(1,2)` | unigrams + bigrams |
+| `(1,3)` | unigrams + bigrams + trigrams |
+| `(2,3)` | bigrams + trigrams only — single words are dropped |
+| `(2,4)` | bigrams, trigrams, and 4-grams |
+
+The range is inclusive at both ends, and the numbers count words per feature. The detail worth watching in the output: n-grams are built *after* stopword removal, so `"He is a good Boy"` contributes the bigram `good boy` rather than `is a` — and because the runs have to be adjacent in the cleaned text, `"Boy and girl are good"` yields `boy girl`, not `good girl`.
+
+`NLP/n-grams/n_grams.ipynb` then does the same thing on the SMS spam dataset with the NLTK pipeline and `max_features`, where the vocabulary is large enough that the n-gram columns have to be capped.
+
+`bag_of_words.ipynb` and `bow_streamlit.py` run the full NLTK pipeline above on that real dataset.
 
 ## ANN churn classification (TensorFlow / Keras)
 
