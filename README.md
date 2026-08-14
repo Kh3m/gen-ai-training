@@ -34,7 +34,9 @@ gen-ai-training/
 │   │   ├── bag_of_words.ipynb # Full pipeline on the SMS spam dataset
 │   │   └── bow_streamlit.py   # Same pipeline as a Streamlit demo
 │   ├── n-grams/           # BoW with n-grams
+│   │   └── n_grams.ipynb      # ngram_range on the SMS spam dataset
 │   ├── tf-idf/            # TF-IDF vectorization
+│   │   └── tfidf_basics.ipynb # TfidfVectorizer on a 3-sentence corpus
 │   └── datasets/          # Shared datasets (smsspamcollection.csv)
 │
 ├── genai/                 # LLM API work (OpenAI SDK against a Groq endpoint)
@@ -70,15 +72,17 @@ gen-ai-training/
 
 ### Notebook naming
 
-Topics that have both a toy example and a real-dataset version follow a two-tier naming pattern:
+Notebook filenames use underscores and say which tier they belong to:
 
 | Tier | Pattern | Example |
 |---|---|---|
-| Toy example, small enough to verify by hand | `<topic>_basics.ipynb` | `NLP/bow/bow_basics.ipynb` |
-| Full pipeline on a real dataset | `<topic>.ipynb` | `NLP/bow/bag_of_words.ipynb` |
+| Toy example, small enough to verify by hand | `<topic>_basics.ipynb` | `NLP/tf-idf/tfidf_basics.ipynb` |
+| Full pipeline on a real dataset | `<topic>.ipynb` | `NLP/n-grams/n_grams.ipynb` |
 | Streamlit demo of the same pipeline | `<topic>_streamlit.py` | `NLP/bow/bow_streamlit.py` |
 
-The topic prefix is kept even though the folder already carries it — it makes editor tabs and fuzzy-find usable once several `_basics` notebooks exist.
+A topic doesn't need every tier — the suffix describes what the notebook actually is. `bow/` is the only one with both so far (`bow_basics.ipynb` and `bag_of_words.ipynb`); `tf-idf/` has only the toy example, so the plain `tfidf.ipynb` name stays free for a dataset version later.
+
+The topic prefix is kept even though the folder already carries it — it makes editor tabs and fuzzy-find usable once several `_basics` notebooks exist. Folder names are still mixed (`n-grams`, `tf-idf` with hyphens vs `one_hot_encoding` with an underscore); notebooks are never imported, so this is cosmetic only.
 
 ## Setup
 
