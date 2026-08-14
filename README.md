@@ -30,7 +30,7 @@ gen-ai-training/
 │   ├── named_entity_recognition.ipynb
 │   ├── one_hot_encoding/  # One-hot encoding → Keras Tokenizer → Embedding layer
 │   ├── bow/               # Bag of Words
-│   │   ├── bow_simple.ipynb   # Minimal CountVectorizer example
+│   │   ├── bow_basics.ipynb   # Minimal CountVectorizer example
 │   │   ├── bag_of_words.ipynb # Full pipeline on the SMS spam dataset
 │   │   └── bow_streamlit.py   # Same pipeline as a Streamlit demo
 │   ├── n-grams/           # BoW with n-grams
@@ -67,6 +67,18 @@ gen-ai-training/
 │
 └── requirements.txt       # Combined deps for the workspace
 ```
+
+### Notebook naming
+
+Topics that have both a toy example and a real-dataset version follow a two-tier naming pattern:
+
+| Tier | Pattern | Example |
+|---|---|---|
+| Toy example, small enough to verify by hand | `<topic>_basics.ipynb` | `NLP/bow/bow_basics.ipynb` |
+| Full pipeline on a real dataset | `<topic>.ipynb` | `NLP/bow/bag_of_words.ipynb` |
+| Streamlit demo of the same pipeline | `<topic>_streamlit.py` | `NLP/bow/bow_streamlit.py` |
+
+The topic prefix is kept even though the folder already carries it — it makes editor tabs and fuzzy-find usable once several `_basics` notebooks exist.
 
 ## Setup
 
@@ -180,7 +192,7 @@ Nothing is trained here — the embeddings are still random initialisations. The
 
 ## Bag of Words
 
-`NLP/bow/bow_simple.ipynb` is the minimal version, kept deliberately separate from the SMS spam pipeline in `bag_of_words.ipynb`. It uses `CountVectorizer(stop_words="english")` on two sentences that differ only in a negation and a repeat:
+`NLP/bow/bow_basics.ipynb` is the minimal version, kept deliberately separate from the SMS spam pipeline in `bag_of_words.ipynb`. It uses `CountVectorizer(stop_words="english")` on two sentences that differ only in a negation and a repeat:
 
 ```
 "The food is good"          → good: 1
